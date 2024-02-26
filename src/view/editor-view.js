@@ -3,22 +3,6 @@ import {createElement} from '../render.js';
 import { humanizeTaskDueDate } from '../utils.js';
 import { BLANC_TEST } from '../const.js';
 
-
-const createOffer = (offer) =>
-  `   
-    <div class="event__available-offers">
-    <div class="event__offer-selector">
-      <input class="event__offer-checkbox  visually-hidden" id="event-offer-luggage-1" type="checkbox" name="event-offer-luggage" checked>
-      <label class="event__offer-label" for="event-offer-luggage-1">
-        <span class="event__offer-title">${offer.title}</span>
-        &plus;&euro;&nbsp;
-        <span class="event__offer-price">${offer.cost}</span>
-      </label>
-    </div>
-`;
-
-const createOffers = (offers) => Array.from(offers, createOffer);
-
 const createPicture = (picture) =>
   `
   <img class="event__photo" src="${picture}.jpg" alt="Event photo">
@@ -26,7 +10,7 @@ const createPicture = (picture) =>
 
 const createPictures = (photosSrc) => Array.from(photosSrc, createPicture);
 
-function createEventEditor({type, destination, cost, date, offers, desctiption, photosSrc}) {
+function createEventEditor({type, destination, cost, date, desctiption, photosSrc}) {
   return (
     `
     <li><form class="event event--edit" action="#" method="post">
@@ -106,7 +90,7 @@ function createEventEditor({type, destination, cost, date, offers, desctiption, 
         <label class="visually-hidden" for="event-start-time-1">From</label>
         <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${humanizeTaskDueDate(date.start, DATE_FORMAT_EDIT)}">
         &mdash;
-        <label class="visually-hidden" for="event-end-time-1">To</label>
+        <label claыss="visually-hidden" for="event-end-time-1">To</label>
         <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${humanizeTaskDueDate(date.end, DATE_FORMAT_EDIT)}">
       </div>
     
@@ -124,7 +108,7 @@ function createEventEditor({type, destination, cost, date, offers, desctiption, 
     <section class="event__details">
       <section class="event__section  event__section--offers">
         <h3 class="event__section-title  event__section-title--offers">Offers</h3>
-          ${createOffers(offers)}
+
       </section>
     
       <section class="event__section  event__section--destination">

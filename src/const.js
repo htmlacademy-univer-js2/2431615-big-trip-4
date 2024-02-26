@@ -26,9 +26,9 @@ const BLANC_TEST =
     start: null,
     end: null,
   },
-  offers: [
-
-  ],
+  offers: {
+    id: 0
+  },
   desctiption:'',
   photosSrc: []
 };
