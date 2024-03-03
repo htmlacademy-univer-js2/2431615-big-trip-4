@@ -1,9 +1,12 @@
-const getRandomArrayElement = (items) => items[Math.floor(Math.random() * items.length)];
 import dayjs from 'dayjs';
+
 
 const humanizeTaskDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format(format) : '';
 
 const countDuration = (dateStart, dateEnd) => dayjs(dateEnd).diff(dateStart, 'm');
 
+const getRandomInt = (maxNumber) => Math.floor(Math.random() * maxNumber);
 
-export{getRandomArrayElement, humanizeTaskDueDate, countDuration};
+const getRandomArrayElement = (items) => items[getRandomInt(items.length)];
+
+export{getRandomArrayElement, humanizeTaskDueDate, countDuration, getRandomInt};
