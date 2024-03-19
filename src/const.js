@@ -33,6 +33,7 @@ const BLANC_TEST =
   photosSrc: []
 };
 
+
 const DATE_FORMAT_EDIT = 'DD/MM/YY hh:mm';
 const DATE_FORMAT_POINT_DAY = 'MMM DD';
 const DATE_FORMAT_POINT_HOURS = 'hh-mm';
@@ -40,7 +41,7 @@ const DATE_FORMAT_POINT_HOURS = 'hh-mm';
 const PHOTOS_COUNT = 20;
 const MAX_PRICE = 2000;
 const MAX_OFFER_ID = 5;
-const POINTS_COUNT = 20;
+const POINTS_COUNT = 12;
 
 
 export {MAX_PRICE, MAX_OFFER_ID,PHOTOS_COUNT,destinations, pointTypes, DATE_FORMAT_EDIT, DATE_FORMAT_POINT_DAY, DATE_FORMAT_POINT_HOURS, BLANC_TEST, POINTS_COUNT};
