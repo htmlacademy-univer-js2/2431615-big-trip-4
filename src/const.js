@@ -13,15 +13,19 @@ const pointTypes = [
 const dates = [
   {
     start: new Date(Date.UTC(2024, 8, 28, 8, 15, 0, 0)),
-    end: new Date(Date.UTC(2024, 8, 28, 10, 15, 0, 0))
+    end: new Date(Date.UTC(2024, 8, 28, 10, 16, 0, 0))
   },
   {
-    start: new Date(Date.UTC(2024, 8, 21, 18, 30, 10, 0)),
-    end: new Date(Date.UTC(2024, 8, 21, 20, 30, 10, 0))
+    start: new Date(Date.UTC(2024, 8, 20, 18, 30, 10, 0)),
+    end: new Date(Date.UTC(2024, 8, 21, 22, 30, 10, 0))
   },
   {
-    start: new Date(Date.UTC(2024, 8, 25, 12, 0, 0, 0)),
+    start: new Date(Date.UTC(2024, 8, 25, 11, 14, 0, 0)),
     end: new Date(Date.UTC(2024, 8, 25, 14, 0, 0, 0))
+  },
+  {
+    start: new Date(Date.UTC(2024, 8, 25, 12, 1, 0, 0)),
+    end: new Date(Date.UTC(2024, 8, 25, 12, 2, 0, 0))
   },
 ];
 
