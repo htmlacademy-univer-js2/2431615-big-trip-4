@@ -44,30 +44,21 @@ function getWeightForNullDate(dateA, dateB) {
 }
 
 const sortByTime = (point1, point2) => {
-  const time1 = dayjs(point1.date.start).hour() * 60 + dayjs(point1.date.start).minute();
-  const time2 = dayjs(point2.date.start).hour() * 60 + dayjs(point2.date.start).minute();
+  const diff1 = dayjs.duration(dayjs(point1.dateEnd).diff(point1.dateStart));
+  const diff2 = dayjs.duration(dayjs(point2.dateEnd).diff(point2.dateStart));
 
-  return getWeightForNullDate(point1.date.start, point2.date.start) ?? time1 - time2;
+
+  return getWeightForNullDate(point1.date.start, point2.date.start) ?? diff2 - diff1;
 };
-
-const sortByEvent = (point1, point2) =>
-  point1.type[0].localeCompare(point2.type[0]);
 
 const sortByPrice = (point1, point2) =>
   point2.cost - point1.cost;
-
-const sortByOffers = (point1, point2) => {
-  const countCheckedOffers = (activeOffers) =>
-    activeOffers.filter((offer) => offer.checked).length;
-
-  return countCheckedOffers(point2.activeOffers) - countCheckedOffers(point1.activeOffers);
-};
 
 const sortByDefault = (point1, point2) => {
 
   const weight = getWeightForNullDate(point1.date.start, point2.date.start);
 
-  return weight ?? dayjs(point1.date.start).diff(dayjs(point2.date.start));
+  return weight ?? dayjs(point2.date.start).diff(dayjs(point1.date.start));
 
 };
 
@@ -89,4 +80,4 @@ const filter = {
 const isEscKey = (key) => key === 'Escape';
 
 
-export{isEscKey, filter ,sortByDefault, sortByOffers, sortByPrice, sortByEvent, sortByTime, getRandomArrayElement, humanizeTaskDueDate, countDuration, getRandomInt, updateItem};
+export{isEscKey, filter ,sortByDefault, sortByPrice, sortByTime, getRandomArrayElement, humanizeTaskDueDate, countDuration, getRandomInt, updateItem};
