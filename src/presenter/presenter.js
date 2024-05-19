@@ -28,7 +28,7 @@ export default class Presenter extends Observable{
   #offersModel;
   #destinationsModel;
   #addPointPresenter;
-  #filter;
+  #filtersElement;
 
   constructor(
     {
@@ -49,11 +49,6 @@ export default class Presenter extends Observable{
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
 
-    this.#filter = new FilterPresenter({
-      filterContainer: this.#headerElement,
-      filterModel: this.#filterModel,
-      pointsModel: this.#pointsModel
-    });
 
     this.addObserver(this.#handleModelEvent);
 
@@ -65,6 +60,8 @@ export default class Presenter extends Observable{
       this._notify(UpdateTypes.INIT);
     }).finally(() => {
       render(this.addPointButtonComponent, document.querySelector('.page-body__container'));
+      this.#renderFilters();
+
     });
 
     this.#pointsModel.addObserver(this.#handleModelEvent);
@@ -138,6 +135,14 @@ export default class Presenter extends Observable{
     });
 
     render(this.#noPointsComponent, this.#mainContainerElement);
+  }
+
+  #renderFilters(){
+    this.#filtersElement = new FilterPresenter({
+      filterContainer: this.#headerElement,
+      filterModel: this.#filterModel,
+      pointsModel: this.#pointsModel
+    });
   }
 
   #handleViewAction = (actionType, updateType, newPoint) => {
