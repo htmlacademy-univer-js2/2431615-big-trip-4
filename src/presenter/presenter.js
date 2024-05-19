@@ -82,7 +82,7 @@ export default class Presenter extends Observable{
   });
 
   onAddTaskClose() {
-    // this.addPointButtonComponent.element.disabled = false;
+    this.addPointButtonComponent.element.disabled = false;
   }
 
 
