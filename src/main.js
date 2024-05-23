@@ -13,6 +13,7 @@ const pageBody = document.querySelector('.page-body');
 const mainContainer = pageBody.querySelector('.trip-events');
 const pointsContainer = pageBody.querySelector('.trip-events__list');
 const headerElement = pageBody.querySelector('.trip-controls');
+const tripMain = pageBody.querySelector('.trip-main');
 
 const points = new PointsModel({
   pointsApiService: new PointsApiService(END_POINT, AUTHORIZATION)
@@ -37,6 +38,7 @@ const presenter = new Presenter(
     offersModel: offers,
     pointsModel: points,
     filterModel: filterModel,
+    tripMain: tripMain,
   }
 );
 

@@ -11,16 +11,19 @@ import LoadingView from '../view/loading-view.js';
 import addPointButtonView from '../view/add-point-button-view.js';
 import Observable from '../framework/observable.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+import TripInfoPresenter from './trip-info-presenter.js';
 
 export default class Presenter extends Observable{
   #pointsContainer = new TripsContainer();
-  #headerElement;
 
+  #headerElement;
   #mainContainerElement;
+  #tripMain;
   #loadingComponent;
   #pointsModel;
   #filterModel;
-  #noPointsComponent = null;
+  #noPointsComponent;
+  #tripInfoComponent;
   #sortElement = null;
   #currentSort = SortTypes.DEFAULT;
   #filterType = FilterTypes.ALL;
@@ -50,6 +53,7 @@ export default class Presenter extends Observable{
       filterModel,
       offersModel,
       destinationsModel,
+      tripMain,
     }){
 
     super();
@@ -60,6 +64,7 @@ export default class Presenter extends Observable{
     this.#filterModel = filterModel;
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
+    this.#tripMain = tripMain;
 
 
     this.addObserver(this.#handleModelEvent);
@@ -72,8 +77,10 @@ export default class Presenter extends Observable{
       this._notify(UpdateTypes.INIT);
     }).finally(() => {
 
-      render(this.addPointButtonComponent, document.querySelector('.page-body__container'));
+
+      this.#renderTripInfo();
       this.#renderFilters();
+      render(this.addPointButtonComponent, this.#tripMain);
 
     });
 
@@ -138,11 +145,21 @@ export default class Presenter extends Observable{
 
   #renderFilters(){
     this.#filtersElement = new FilterPresenter({
-      filterContainer: this.#headerElement,
+      filterContainer: this.#tripMain,
       filterModel: this.#filterModel,
       pointsModel: this.#pointsModel
     });
   }
+
+  #renderTripInfo(){
+    this.#tripInfoComponent = new TripInfoPresenter({
+      tripMain: this.#tripMain,
+      pointsModel: this.#pointsModel,
+      offersModel: this.#offersModel,
+      destinationsModel: this.#destinationsModel,
+    });
+  }
+
 
   #handleViewAction = async (actionType, updateType, newPoint) => {
     this.#uiBlocker.block();
