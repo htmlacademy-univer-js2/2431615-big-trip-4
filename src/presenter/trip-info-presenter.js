@@ -1,6 +1,5 @@
 import { remove, render, replace } from '../framework/render';
 import TripInfoView from '../view/trip-info-view';
-import {addObserver} from '../framework//observable';
 
 export default class TripInfoPresenter{
   #tripInfoComponent;
