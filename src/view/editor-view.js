@@ -5,6 +5,7 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 
 import 'flatpickr/dist/flatpickr.min.css';
+import dayjs from 'dayjs';
 
 const createPicture = (picture) =>
   `
@@ -29,15 +30,16 @@ const createOptions = (currentType, allTypes) =>
     </fieldset>
   </div>`);
 
-const createDestination = (destination, isActive) => `<option ${isActive ? 'selected' : ''} value="${destination}">${destination}</option>`;
+const createDestination = (destination) => `<option value="${destination}">${destination}</option>`;
 
 const createDestinations = (curType, curDestination, allDestinations, isDisabled) =>
   `<div class="event__field-group  event__field-group--destination">
-    <label class="event__label  event__type-output" for="event-destination-1">
+    <label class="event__label  event__type-output" for="event-destination-${curDestination}">
       ${curType}
     </label>
 
-    <select class="event__input  event__input--destination" id="destination-list-1" ${isDisabled ? 'disabled' : ''}>
+    <input type="text" name="event-destination" class="event__input  event__input--destination" value="${curDestination ? allDestinations.find(({id}) => id === curDestination).name : ''}" list="destination-list-1" id="event-destination-${curDestination}" ${isDisabled ? 'disabled' : ''}>
+    <datalist id='destination-list-1'>
       ${curDestination !== '' ?
     allDestinations.map((destination) =>
       createDestination(destination.name, destination.id === curDestination)
@@ -46,8 +48,7 @@ const createDestinations = (curType, curDestination, allDestinations, isDisabled
       createDestination(destination.name, false)
     ).join('')
 }
-  }
-    </select>
+  </datalist>
   </div>`;
 
 const createOfferEdit = (currentTypeOffers, offers, isDisabled) => {
@@ -58,6 +59,9 @@ const createOfferEdit = (currentTypeOffers, offers, isDisabled) => {
     let isActive = false;
     if(offers){
       isActive = offers.some((offerId) => offerId === offer.id);
+    }
+    else{
+      return '';
     }
     res += `
     <div class="event__offer-selector">
@@ -74,8 +78,11 @@ const createOfferEdit = (currentTypeOffers, offers, isDisabled) => {
 };
 
 
-const createOffersEdit = (currentTypeOffers, offers, isDisabled) =>
-  `
+const createOffersEdit = (currentTypeOffers, offers, isDisabled) => {
+  if (!currentTypeOffers.length){
+    return '';
+  }
+  return `
   <section class="event__section  event__section--offers">
   <h3 class="event__section-title  event__section-title--offers">Offers</h3>
     <div class="event__available-offers">
@@ -83,6 +90,7 @@ const createOffersEdit = (currentTypeOffers, offers, isDisabled) =>
     </div>
   </section>
   `;
+};
 
 const createButtons = (isNew, isDisabled, isDeleting, isSaving) =>{
   const saveButtonText = isSaving ? 'Saving...' : 'Save';
@@ -94,6 +102,26 @@ const createButtons = (isNew, isDisabled, isDeleting, isSaving) =>{
   ${isNew ? '' : '<button class="event__rollup-btn" type="button">'}
 
 `);};
+
+const createDestinationsSection = (destination, curDestinationData) => {
+  if(curDestinationData && !curDestinationData.description){
+    return '';
+  }
+  return `<section class="event__section  event__section--destination">
+  <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+  <p class="event__destination-description">${destination ? curDestinationData.description : ''}</p>
+  ${
+  curDestinationData && curDestinationData.pictures.length !== 0 ?
+    `<div class="event__photos-container">
+      <div class="event__photos-tape">
+        ${createPictures(curDestinationData.pictures)}
+      </div>
+    </div>
+  </section> ` :
+    ''
+
+}`;
+};
 
 const createEditorView = (point, allOffers, allDestinations) =>{
 
@@ -125,7 +153,7 @@ const createEditorView = (point, allOffers, allDestinations) =>{
         <label class="visually-hidden" for="event-start-time-1">From</label>
         <input  class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${humanizeTaskDueDate(date.start, DATE_FORMAT_EDIT)}" ${isDisabled ? 'disabled' : ''}>
         &mdash;
-        <label claыss="visually-hidden" for="event-end-time-1">To</label>
+        <label class="visually-hidden" for="event-end-time-1">To</label>
         <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${humanizeTaskDueDate(date.end, DATE_FORMAT_EDIT)}" ${isDisabled ? 'disabled' : ''}>
       </div>
     
@@ -143,17 +171,7 @@ const createEditorView = (point, allOffers, allDestinations) =>{
     <section class="event__details">
       ${createOffersEdit(currentTypeOffers, offers, isDisabled)}
 
-    
-      <section class="event__section  event__section--destination">
-        <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">${destination ? curDestinationData.description : ''}</p>
-    
-        <div class="event__photos-container">
-          <div class="event__photos-tape">
-            ${createPictures(destination ? curDestinationData.pictures : [])}
-          </div>
-        </div>
-      </section>
+      ${createDestinationsSection(destination, curDestinationData)}
     </section>
     </form>
     </li>
@@ -233,8 +251,8 @@ export default class EditorView extends AbstractStatefulView{
         timeInputs[0],
         {
           enableTime: true,
-          dateFormat: 'd/m/y H:i',
-          defaultDate: '',
+          dateFormat: 'd/m/Y H:i',
+          defaultDate: this._state.date.end ? dayjs(this._state.date.start).format('DD/MM/YYYY HH:mm') : '',
           onChange: this.#onDateChangeFrom,
         },
       );
@@ -242,8 +260,8 @@ export default class EditorView extends AbstractStatefulView{
         timeInputs[1],
         {
           enableTime: true,
-          dateFormat: 'd/m/y H:i',
-          defaultDate: '',
+          dateFormat: 'd/m/Y H:i',
+          defaultDate: this._state.date.end ? dayjs(this._state.date.end).format('DD/MM/YYYY HH:mm') : '',
           onChange: this.#onDateChangeTo,
         }
       );
@@ -319,6 +337,9 @@ export default class EditorView extends AbstractStatefulView{
 
   #onFormSubmit = (evt) => {
     evt.preventDefault();
+    this.updateElement({
+      cost: this._state.cost,
+    });
     this.#onSubmit(EditorView.parseStateToPoint(this._state));
   };
 
@@ -332,11 +353,12 @@ export default class EditorView extends AbstractStatefulView{
   #onPriceInput = (evt) => {
     const regex = /^\d{1,6}$/;
     if (regex.test(evt.target.value)) {
-      this.updateElement({
-        cost: evt.target.value,
-      });
+      this._state.cost = evt.target.value;
+    } else if (evt.target.value === '') {
+      this._state.cost = '';
     }
   };
+
 
   static parsePointToState(point, isNew){
 

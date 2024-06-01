@@ -4,16 +4,18 @@ import duration from 'dayjs/plugin/duration';
 const humanizeTaskDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format(format) : '';
 
 const countDuration = (dateStart, dateEnd) => {
-
   dayjs.extend(duration);
   const diff = dayjs.duration(dayjs(dateEnd).diff(dateStart));
 
+  const padZero = (num) => (num < 10 ? `0${num}` : num);
+
   if (diff.asHours() < 1) {
-    return `${diff.minutes()}M`;
+    return `${padZero(diff.minutes())}m`;
   } else if (diff.asDays() < 1) {
-    return `${diff.hours()}H ${diff.minutes()}M`;
+    return `${padZero(diff.hours())}h ${padZero(diff.minutes())}m`;
   } else {
-    return `${diff.days()}D ${diff.hours()}H ${diff.minutes()}M`;
+    const totalDays = diff.years ? diff.years() * 365 + diff.days() : diff.days;
+    return `${padZero(totalDays)}d ${padZero(diff.hours())}h ${padZero(diff.minutes())}m`;
   }
 };
 
@@ -55,7 +57,7 @@ const sortByDefault = (point1, point2) => {
 
   const weight = getWeightForNullDate(point1.date.start, point2.date.start);
 
-  return weight ?? dayjs(point2.date.start).diff(dayjs(point1.date.start));
+  return weight ?? dayjs(point1.date.start).diff(dayjs(point2.date.start));
 
 };
 
