@@ -43,6 +43,11 @@ export default class Presenter extends Observable{
     onClick: () => {
       this.#createPoint();
       this.addPointButtonComponent.element.disabled = true;
+
+      if(this.#noPointsComponent){
+        remove(this.#noPointsComponent);
+      }
+
     }});
 
   constructor(
@@ -211,7 +216,13 @@ export default class Presenter extends Observable{
         this.#addPointPresenter = new AddPointPresenter({
           pointsContainer: this.#pointsContainer,
           onDataChange: this.#handleViewAction,
-          onDestroy: () => {this.addPointButtonComponent.element.disabled = false;},
+          onDestroy: () => {
+            this.addPointButtonComponent.element.disabled = false;
+            if(!this.#pointsModel.points.length){
+              this.#renderEmptyPoints();
+            }
+
+          },
           allOffers: this.#offersModel.offers,
           allDestinations: this.#destinationsModel.destinations,
         });
@@ -272,7 +283,7 @@ export default class Presenter extends Observable{
 
   #initPoints(){
     this.#renderPointsContainer();
-    if(this.#pointsModel.points.length === 0 && !this.#isLoading){
+    if(this.#pointsModel.points.length === 0){
       this.#renderEmptyPoints();
     }
   }
