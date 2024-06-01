@@ -12,9 +12,9 @@ const BLANC_TEST =
 };
 
 
-const DATE_FORMAT_EDIT = 'DD/MM/YY hh:mm';
+const DATE_FORMAT_EDIT = 'DD/MM/YY HH:mm';
 const DATE_FORMAT_POINT_DAY = 'MMM DD';
-const DATE_FORMAT_POINT_HOURS = 'hh-mm';
+const DATE_FORMAT_POINT_HOURS = 'HH:mm';
 
 const PHOTOS_COUNT = 20;
 const MAX_PRICE = 2000;
