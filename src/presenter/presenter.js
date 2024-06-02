@@ -3,8 +3,9 @@ import TripsContainer from '../view/tripsContainer-view.js';
 import {remove, render} from '../framework/render.js';
 import EmptyPointsView from '../view/no-points-view.js';
 import PointPresenter from './point-presenter.js';
-import { sortByTime, sortByPrice, sortByDefault, filter } from '../utils.js';
-import { SortTypes, UpdateTypes, UserActions, FilterTypes, TimeLimit } from '../const.js';
+import { sortByTime, sortByPrice, sortByDefault} from '../utils/sort-utils.js';
+import {FiltersMethods } from '../utils/filter-utils.js';
+import { SortTypes, FilterTypes } from '../const/point-const.js';
 import FilterPresenter from './filter-presenter.js';
 import AddPointPresenter from './add-point-presenter.js';
 import LoadingView from '../view/loading-view.js';
@@ -12,47 +13,39 @@ import addPointButtonView from '../view/add-point-button-view.js';
 import Observable from '../framework/observable.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import TripInfoPresenter from './trip-info-presenter.js';
+import ErrorPointsView from '../view/error-points-view.js';
+import { TimeLimits, UpdateTypes, UserActions } from '../const/api-const.js';
 
 export default class Presenter extends Observable{
   #pointsContainer = new TripsContainer();
-
-  #headerElement;
   #mainContainerElement;
   #tripMain;
   #loadingComponent;
   #pointsModel;
   #filterModel;
   #noPointsComponent;
-  #tripInfoComponent;
-  #sortElement = null;
-  #currentSort = SortTypes.DEFAULT;
-  #filterType = FilterTypes.ALL;
-  #pointPresenters = new Map();
+  #tripInfoPresenter;
+  #sortElement;
+  #currentSort;
+  #filterType;
+  #pointPresenters;
   #isLoading = true;
   #offersModel;
   #destinationsModel;
   #addPointPresenter;
-  #filtersElement;
+  #filtersPresenter;
+  #errorPointsView;
+  #isError;
 
   #uiBlocker = new UiBlocker({
-    lowerLimit: TimeLimit.LOWER_LIMIT,
-    upperLimit: TimeLimit.UPPER_LIMIT
+    lowerLimit: TimeLimits.LOWER,
+    upperLimit: TimeLimits.UPPER
   });
 
-  addPointButtonComponent = new addPointButtonView({
-    onClick: () => {
-      this.#createPoint();
-      this.addPointButtonComponent.element.disabled = true;
-
-      if(this.#noPointsComponent){
-        remove(this.#noPointsComponent);
-      }
-
-    }});
+  #addPointButtonComponent;
 
   constructor(
     {
-      controlsDiv,
       tripsSection,
       pointsModel,
       filterModel,
@@ -62,7 +55,6 @@ export default class Presenter extends Observable{
     }){
 
     super();
-    this.#headerElement = controlsDiv;
 
     this.#mainContainerElement = tripsSection;
     this.#pointsModel = pointsModel;
@@ -70,46 +62,41 @@ export default class Presenter extends Observable{
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
     this.#tripMain = tripMain;
-
-
-    this.addObserver(this.#handleModelEvent);
+    this.#isError = false;
+    this.#sortElement = null;
+    this.#currentSort = SortTypes.DEFAULT;
+    this.#filterType = FilterTypes.ALL;
+    this.#pointPresenters = new Map();
+    this.#addPointButtonComponent = new addPointButtonView(this.#onAddPointClick);
 
     Promise.all([
       this.#pointsModel.init(),
       this.#offersModel.init(),
       this.#destinationsModel.init(),
-    ]).then(() => {
-      this._notify(UpdateTypes.INIT);
-    }).finally(() => {
+    ])
+      .then(() => {
+        this._notify(UpdateTypes.INIT);
+      })
+      .catch(() => {
+        this.#isError = true;
+        this.#renderErrorPoints();
+      })
+      .finally(() => {
+        this.#isLoading = false;
+        this.#renderFilters();
+        render(this.#addPointButtonComponent, this.#tripMain);
+      });
 
-
-      this.#renderTripInfo();
-      this.#renderFilters();
-      render(this.addPointButtonComponent, this.#tripMain);
-
-    });
-
-    this.#pointsModel.addObserver(this.#handleModelEvent);
-    this.#filterModel.addObserver(this.#handleModelEvent);
-  }
-
-
-  #createPoint() {
-    this.#currentSort = SortTypes.DEFAULT;
-    this.#filterModel.setFilter(UpdateTypes.MAJOR, FilterTypes.ALL);
-    this.#addPointPresenter.init();
-  }
-
-
-  init() {
-    this.#renderComponents();
+    this.addObserver(this.#onModelEvent);
+    this.#pointsModel.addObserver(this.#onModelEvent);
+    this.#filterModel.addObserver(this.#onModelEvent);
   }
 
   get points() {
     this.#filterType = this.#filterModel.filter;
     const points = this.#pointsModel.points;
 
-    const filteredPoints = filter[this.#filterType](points);
+    const filteredPoints = FiltersMethods[this.#filterType](points);
     switch (this.#currentSort) {
       case SortTypes.BY_TIME:
         return filteredPoints.sort(sortByTime);
@@ -121,19 +108,30 @@ export default class Presenter extends Observable{
     return filteredPoints;
   }
 
+
+  init() {
+    this.#renderComponents();
+  }
+
   #renderPoint = (point) => {
     const pointPresenter = new PointPresenter(
       {
         offers: this.#offersModel.offers,
         destinations: this.#destinationsModel.destinations,
         pointsContainer: this.#pointsContainer.element,
-        onPointChange: this.#handleViewAction,
+        onPointChange: this.#onViewAction,
         onModeChange: this.#onModeChange,
       }
     );
     pointPresenter.init(point);
     this.#pointPresenters.set(point.id, pointPresenter);
   };
+
+  #createPoint() {
+    this.#currentSort = SortTypes.DEFAULT;
+    this.#filterModel.setFilter(UpdateTypes.MAJOR, FilterTypes.ALL);
+    this.#addPointPresenter.init();
+  }
 
   #onModeChange = () => {
     this.#addPointPresenter.destroy();
@@ -144,106 +142,32 @@ export default class Presenter extends Observable{
     this.#noPointsComponent = new EmptyPointsView({
       filterType: this.#filterType
     });
-
     render(this.#noPointsComponent, this.#mainContainerElement);
   }
 
+  #renderErrorPoints(){
+    this.#errorPointsView = new ErrorPointsView();
+
+    render(this.#errorPointsView, this.#mainContainerElement);
+  }
+
   #renderFilters(){
-    this.#filtersElement = new FilterPresenter({
+    this.#filtersPresenter = new FilterPresenter({
       filterContainer: this.#tripMain,
       filterModel: this.#filterModel,
       pointsModel: this.#pointsModel
     });
+    this.#filtersPresenter.init();
   }
 
   #renderTripInfo(){
-    this.#tripInfoComponent = new TripInfoPresenter({
+    this.#tripInfoPresenter = new TripInfoPresenter({
       tripMain: this.#tripMain,
-      pointsModel: this.#pointsModel,
       offersModel: this.#offersModel,
       destinationsModel: this.#destinationsModel,
     });
+    this.#tripInfoPresenter.init(this.points);
   }
-
-
-  #handleViewAction = async (actionType, updateType, newPoint) => {
-    this.#uiBlocker.block();
-    switch (actionType) {
-      case UserActions.UPDATE_POINT:
-        this.#pointPresenters.get(newPoint.id).setSaving();
-        try{
-          await this.#pointsModel.updatePoint(updateType, newPoint);
-        } catch(err){
-          this.#pointPresenters.get(newPoint.id).setAbording();
-        }
-        break;
-      case UserActions.ADD_POINT:
-        this.#addPointPresenter.setSaving();
-        try{
-          await this.#pointsModel.addPoint(updateType, newPoint);
-        } catch (err){
-          this.#addPointPresenter.setAbording();
-        }
-        break;
-      case UserActions.DELETE_POINT:
-        this.#pointPresenters.get(newPoint.id).setDeleting();
-        try{
-          await this.#pointsModel.deletePoint(updateType, newPoint);
-        } catch (err) {
-          this.pointPresenters.get(newPoint.id).setAbording();
-        }
-        break;
-    }
-
-    this.#uiBlocker.unblock();
-  };
-
-  #handleModelEvent = (updateType, data) => {
-    switch (updateType) {
-      case UpdateTypes.PATCH:
-        this.#pointPresenters.get(data.id).init(data);
-        break;
-      case UpdateTypes.MINOR:
-        this.#clearComponents();
-        this.#renderComponents();
-        break;
-      case UpdateTypes.MAJOR:
-        this.#clearComponents({resetSortType : true});
-        this.#renderComponents();
-        break;
-      case UpdateTypes.INIT:
-
-        this.#addPointPresenter = new AddPointPresenter({
-          pointsContainer: this.#pointsContainer,
-          onDataChange: this.#handleViewAction,
-          onDestroy: () => {
-            this.addPointButtonComponent.element.disabled = false;
-            if(!this.#pointsModel.points.length){
-              this.#renderEmptyPoints();
-            }
-
-          },
-          allOffers: this.#offersModel.offers,
-          allDestinations: this.#destinationsModel.destinations,
-        });
-
-        this.#isLoading = false;
-        this.#clearComponents();
-        this.#renderComponents();
-
-        break;
-    }
-  };
-
-  #onSort = (sortType) => {
-    if (this.#currentSort === sortType) {
-      return;
-    }
-    this.#currentSort = sortType;
-
-    this.#clearComponents();
-    this.#renderComponents();
-  };
 
   #renderLoading(){
     this.#loadingComponent = new LoadingView();
@@ -268,6 +192,9 @@ export default class Presenter extends Observable{
     remove(this.#sortElement);
     remove(this.#loadingComponent);
 
+    if(this.#errorPointsView){
+      remove(this.#errorPointsView);
+    }
     if (this.#noPointsComponent) {
       remove(this.#noPointsComponent);
     }
@@ -276,14 +203,14 @@ export default class Presenter extends Observable{
     }
   }
 
-
   #renderPointsContainer(){
     render(this.#pointsContainer, this.#mainContainerElement);
   }
 
   #initPoints(){
     this.#renderPointsContainer();
-    if(this.#pointsModel.points.length === 0){
+
+    if(this.#pointsModel.points.length === 0 && !this.#isError){
       this.#renderEmptyPoints();
     }
   }
@@ -300,8 +227,14 @@ export default class Presenter extends Observable{
       return;
     }
 
+    if(!this.#tripInfoPresenter){
+      this.#renderTripInfo();
+    }
+
     this.#renderSort();
     this.#initPoints();
+
+    this.#tripInfoPresenter.init(this.points);
 
 
     this.#renderPoints(this.points);
@@ -312,4 +245,97 @@ export default class Presenter extends Observable{
       this.#renderPoint(point);
     });
   }
+
+  #onSort = (sortType) => {
+    if (this.#currentSort === sortType) {
+      return;
+    }
+    this.#currentSort = sortType;
+
+    this.#clearComponents();
+    this.#renderComponents();
+  };
+
+  #onViewAction = async (actionType, updateType, newPoint) => {
+    this.#uiBlocker.block();
+    try {
+      switch (actionType) {
+        case UserActions.UPDATE_POINT:
+          this.#pointPresenters.get(newPoint.id).setSaving();
+          await this.#pointsModel.updatePoint(updateType, newPoint);
+          break;
+        case UserActions.ADD_POINT:
+          this.#addPointPresenter.setSaving();
+          await this.#pointsModel.addPoint(updateType, newPoint);
+          break;
+        case UserActions.DELETE_POINT:
+          this.#pointPresenters.get(newPoint.id).setDeleting();
+          await this.#pointsModel.deletePoint(updateType, newPoint);
+          break;
+      }
+    } catch (err) {
+      switch (actionType) {
+        case UserActions.UPDATE_POINT:
+          this.#pointPresenters.get(newPoint.id).setAbording();
+          break;
+        case UserActions.ADD_POINT:
+          this.#addPointPresenter.setAbording();
+          break;
+        case UserActions.DELETE_POINT:
+          this.#pointPresenters.get(newPoint.id).setAbording();
+          break;
+      }
+    } finally {
+      this.#uiBlocker.unblock();
+    }
+  };
+
+  #onAddPointClick = () => {
+
+    this.#createPoint();
+    this.#addPointButtonComponent.element.disabled = true;
+
+    if(this.#noPointsComponent){
+      remove(this.#noPointsComponent);
+    }
+
+  };
+
+  #onModelEvent = (updateType, data) => {
+    switch (updateType) {
+      case UpdateTypes.PATCH:
+        this.#pointPresenters.get(data.id).init(data);
+        break;
+      case UpdateTypes.MINOR:
+        this.#clearComponents();
+        this.#renderComponents();
+        break;
+      case UpdateTypes.MAJOR:
+        this.#clearComponents({resetSortType : true});
+        this.#renderComponents();
+        break;
+      case UpdateTypes.INIT:
+
+        this.#addPointPresenter = new AddPointPresenter({
+          pointsContainer: this.#pointsContainer,
+          onDataChange: this.#onViewAction,
+          onDestroy: () => {
+            this.#addPointButtonComponent.element.disabled = false;
+            if(!this.points.length && !this.#isError){
+              this.#renderEmptyPoints();
+            }
+
+          },
+          allOffers: this.#offersModel.offers,
+          allDestinations: this.#destinationsModel.destinations,
+        });
+
+        this.#isLoading = false;
+        this.#clearComponents();
+        this.#renderComponents();
+
+        break;
+    }
+  };
+
 }

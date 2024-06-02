@@ -1,5 +1,5 @@
 
-import { SortTypes } from '../const.js';
+import { SortTypes } from '../const/point-const.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
 function createSortTemplate(sort) {
