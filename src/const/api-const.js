@@ -15,8 +15,8 @@ const UpdateTypes = {
 
 
 const TimeLimits = {
-  LOWER: 300,
-  UPPER: 1000,
+  LOWER_LIMIT: 300,
+  UPPER_LIMIT: 1000,
 };
 
 

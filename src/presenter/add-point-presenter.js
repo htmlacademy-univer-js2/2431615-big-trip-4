@@ -20,7 +20,7 @@ export default class AddPointPresenter {
   }
 
   init() {
-    if (this.#editorComponent !== null) {
+    if (this.#editorComponent) {
       return;
     }
 
@@ -37,7 +37,7 @@ export default class AddPointPresenter {
   }
 
   destroy() {
-    if (this.#editorComponent === null) {
+    if (!this.#editorComponent) {
       return;
     }
 
