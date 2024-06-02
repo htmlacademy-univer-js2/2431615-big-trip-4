@@ -79,12 +79,12 @@ export default class Presenter extends Observable{
       })
       .catch(() => {
         this.#isError = true;
-        this.#renderErrorPoints();
       })
       .finally(() => {
         this.#isLoading = false;
         this.#renderFilters();
         render(this.#addPointButtonComponent, this.#tripMain);
+        this._notify(UpdateTypes.INIT);
       });
 
     this.addObserver(this.#onModelEvent);
@@ -185,7 +185,11 @@ export default class Presenter extends Observable{
   }
 
   #clearComponents({ resetSortType = false} = {}) {
-    this.#addPointPresenter.destroy();
+
+    if(!this.#isError){
+      this.#addPointPresenter.destroy();
+    }
+
 
     this.#clearPoints();
 
@@ -209,8 +213,7 @@ export default class Presenter extends Observable{
 
   #initPoints(){
     this.#renderPointsContainer();
-
-    if(this.#pointsModel.points.length === 0 && !this.#isError){
+    if(this.#pointsModel.points.length === 0){
       this.#renderEmptyPoints();
     }
   }
@@ -227,17 +230,18 @@ export default class Presenter extends Observable{
       return;
     }
 
-    if(!this.#tripInfoPresenter){
-      this.#renderTripInfo();
+    if(this.#isError){
+      this.#renderErrorPoints();
+    }else{
+      if(!this.#tripInfoPresenter){
+        this.#renderTripInfo();
+      }
+      this.#renderSort();
+      this.#initPoints();
+      this.#tripInfoPresenter.init(this.points);
+      this.#renderPoints(this.points);
     }
 
-    this.#renderSort();
-    this.#initPoints();
-
-    this.#tripInfoPresenter.init(this.points);
-
-
-    this.#renderPoints(this.points);
   }
 
   #renderPoints() {
@@ -315,20 +319,20 @@ export default class Presenter extends Observable{
         this.#renderComponents();
         break;
       case UpdateTypes.INIT:
-
-        this.#addPointPresenter = new AddPointPresenter({
-          pointsContainer: this.#pointsContainer,
-          onDataChange: this.#onViewAction,
-          onDestroy: () => {
-            this.#addPointButtonComponent.element.disabled = false;
-            if(!this.points.length && !this.#isError){
-              this.#renderEmptyPoints();
-            }
-
-          },
-          allOffers: this.#offersModel.offers,
-          allDestinations: this.#destinationsModel.destinations,
-        });
+        if(!this.#isError){
+          this.#addPointPresenter = new AddPointPresenter({
+            pointsContainer: this.#pointsContainer,
+            onDataChange: this.#onViewAction,
+            onDestroy: () => {
+              this.#addPointButtonComponent.element.disabled = false;
+              if(!this.points.length && !this.#isError){
+                this.#renderEmptyPoints();
+              }
+            },
+            allOffers: this.#offersModel.offers,
+            allDestinations: this.#destinationsModel.destinations,
+          });
+        }
 
         this.#isLoading = false;
         this.#clearComponents();
