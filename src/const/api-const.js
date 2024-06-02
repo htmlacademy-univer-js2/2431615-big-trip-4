@@ -1,4 +1,3 @@
-import { generateRandomString } from '../utils/utils';
 
 const UserActions = {
   UPDATE_POINT: 'update',
@@ -15,12 +14,12 @@ const UpdateTypes = {
 
 
 const TimeLimits = {
-  LOWER_LIMIT: 300,
-  UPPER_LIMIT: 1000,
+  LOWER: 300,
+  UPPER: 1000,
 };
 
 
-const AUTHORIZATION = `Basic ${generateRandomString(16)}`;
+const AUTHORIZATION = 'Basic a1243sggsg232dgjs';
 
 const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
 

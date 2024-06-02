@@ -26,9 +26,9 @@ const sortByPrice = (point1, point2) => point2.cost - point1.cost;
 
 const sortByDefault = (point1, point2) => {
 
-  const weight = getWeightForNullDate(point2.date.start, point1.date.start);
+  const weight = getWeightForNullDate(point1.date.start, point2.date.start);
 
-  return weight ?? dayjs(point2.date.start).diff(dayjs(point1.date.start));
+  return weight ?? dayjs(point1.date.start).diff(dayjs(point2.date.start));
 
 };
 

@@ -98,12 +98,12 @@ const createButtonsTemplate = (isNew, isDisabled, isDeleting, isSaving) =>{
   return(`
   <button class="event__save-btn  btn  btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>${saveButtonText}</button>
   <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>${isDeleting ? 'Deleting...' : resetButtonText}</button>
-  ${isNew ? '' : '<button class="event__rollup-btn" type="button">'}
+  ${isNew ? '' : `<button class="event__rollup-btn" type="button" ${isDisabled ? 'disabled' : ''} >`}
 
 `);};
 
 const createDestinationsSectionTemplate = (destination, curDestinationData) => {
-  if(curDestinationData && !curDestinationData.description){
+  if(curDestinationData && !curDestinationData.description || !destination){
     return '';
   }
   return `<section class="event__section  event__section--destination">
@@ -170,7 +170,7 @@ const createEditorViewTemplate = (point, allOffers, allDestinations) =>{
     <section class="event__details">
       ${createOffersEditTemplate(currentTypeOffers, offers, isDisabled)}
 
-      ${createDestinationsSectionTemplate(destination, curDestinationData)}
+      ${createDestinationsSectionTemplate(destination, curDestinationData !== undefined ? curDestinationData : null)}
     </section>
     </form>
     </li>
@@ -270,7 +270,7 @@ export default class EditorView extends AbstractStatefulView{
         {
           enableTime: true,
           dateFormat: 'd/m/y H:i',
-          defaultDate: this._state.date.end ? dayjs(this._state.date.start).format('DD/MM/YY HH:mm') : '',
+          defaultDate: this._state.date.start ? dayjs(this._state.date.start).format('DD/MM/YY HH:mm') : '',
           onChange: this.#onDateChangeFrom,
         },
       );
